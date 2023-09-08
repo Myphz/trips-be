@@ -1,3 +1,3 @@
 import { FastifyPluginCallback } from "fastify";
 
-export const FilesAPI: FastifyPluginCallback = (fastify, options) => {};
+export const FilesAPI: FastifyPluginCallback = (fastify) => {};
