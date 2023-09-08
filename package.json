@@ -1,7 +1,8 @@
 {
   "scripts": {
     "dev": "nodemon src/main.ts",
-    "build": "tsc"
+    "build": "tsc",
+    "test": "ts-node src/test.ts"
   },
   "dependencies": {
     "fastify": "^4.22.2",
