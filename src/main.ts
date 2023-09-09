@@ -1,4 +1,7 @@
 import { fastify } from "./constants";
+import { FilesAPI } from "./routes/files";
+
+fastify.register(FilesAPI);
 
 const main = async () => {
   try {
