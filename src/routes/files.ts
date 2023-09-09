@@ -11,6 +11,7 @@ export const FilesAPI: FastifyPluginCallback = async (fastify, _, done) => {
       fields: 0,
     },
   });
+
   fastify.post("/upload", async (req, res) => {
     const files = req.files();
     const ids: Record<string, string> = {};
