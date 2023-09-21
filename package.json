@@ -2,24 +2,30 @@
   "scripts": {
     "dev": "nodemon src/main.ts",
     "build": "tsc",
-    "test": "ts-node src/test.ts"
+    "test": "node --test -r esbuild-register src/test/*.ts",
+    "generate-types": "npx supabase gen types typescript --project-id 'osbnntqdwcamhqbpdzwz' --schema public > src/types/supabase.ts"
   },
   "dependencies": {
     "@fastify/multipart": "^7.7.3",
+    "@supabase/supabase-js": "^2.36.0",
     "fastify": "^4.22.2",
     "node-telegram-bot-api": "^0.61.0"
   },
   "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.3",
     "@types/node": "^20.5.9",
     "@types/node-telegram-bot-api": "^0.61.7",
     "@typescript-eslint/eslint-plugin": "^6.6.0",
     "@typescript-eslint/parser": "^6.6.0",
     "dotenv": "^16.3.1",
+    "esbuild-register": "^3.5.0",
     "eslint": "^8.48.0",
     "eslint-plugin-only-warn": "^1.1.0",
+    "jsonwebtoken": "^9.0.2",
     "nodemon": "^3.0.1",
     "prettier": "^3.0.3",
     "ts-node": "^10.9.1",
+    "tsx": "^3.12.10",
     "typescript": "^5.2.2"
   }
 }
