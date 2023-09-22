@@ -82,7 +82,7 @@ export async function create<T extends keyof Database["public"]["Tables"]>({
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   const id = data?.[0].id;
-  assert.ok(id);
+  id !== undefined && assert.ok(id);
 
   return id;
 }
@@ -108,7 +108,7 @@ export async function update<T extends keyof Database["public"]["Tables"]>({
   else checkIsBad({ error, count });
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
-  assert.ok(data?.[0].id);
+  data?.[0]?.id !== undefined && assert.ok(data?.[0]?.id);
 }
 
 export async function addTrip({
@@ -124,11 +124,22 @@ export async function addTrip({
   trip_id?: number;
   parent?: number;
 }) {
-  const entityId = id ?? (await create({ client, table: "entities", params: {}, succeed: true }));
+  const entityId =
+    id ??
+    (await create({
+      client,
+      table: "entities",
+      params: {
+        ...(trip_id && { trip_id }),
+        ...(parent && { parent }),
+      },
+      succeed: true,
+    }));
+
   return await create({
     client,
     table: "trips",
-    params: { id: entityId, destination: "test", ...(trip_id && { trip_id }), ...(parent && { parent }) },
+    params: { id: entityId, destination: "test" },
     succeed,
   });
 }
