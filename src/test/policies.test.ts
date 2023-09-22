@@ -1,74 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import dotenv from "dotenv";
 import { test, describe, beforeEach } from "node:test";
-import assert from "node:assert/strict";
-import jwt from "jsonwebtoken";
-import { throwError } from "../utils/throw";
-import { PostgrestError, createClient } from "@supabase/supabase-js";
+import { client, client2, addTrip, create, user_id, user_id2, update } from "./utils";
 
-import type { Database } from "../types/supabase";
-
-dotenv.config({ path: ".env.test" });
-
-const SUPABASE_URL = process.env.SUPABASE_URL ?? throwError("supabase url");
-const ANON_KEY = process.env.ANON_KEY ?? throwError("anon key");
-
-const user_id = "6b66be31-4966-4503-9dd4-67a44c1c0505";
-const user_id2 = "807e08e3-1b6d-4cb5-b3f9-55758e68dd3c";
-
-function generateJWT(email: string, id: string) {
-  const now = Math.floor(+new Date() / 1000) - 20;
-  const exp = now + 99999;
-
-  const payload = {
-    aud: "authenticated",
-    exp,
-    iat: now,
-    iss: `${SUPABASE_URL ?? throwError("supabase url")}/auth/v1`,
-    sub: id,
-    email: email,
-    phone: "",
-    app_metadata: {
-      provider: "email",
-      providers: ["email"],
-    },
-    user_metadata: {},
-    role: "authenticated",
-    aal: "aal1",
-    amr: [
-      {
-        method: "otp",
-        timestamp: now,
-      },
-    ],
-  };
-
-  return jwt.sign(payload, process.env.JWT_SECRET ?? throwError("JWT_SECRET not set"));
-}
-
-const authToken = generateJWT("test@test.com", user_id);
-const authToken2 = generateJWT("test@test2.com", user_id2);
-
-const client = createClient<Database>(SUPABASE_URL, ANON_KEY, {
-  global: { headers: { Authorization: `Bearer ${authToken}` } },
-});
-
-const client2 = createClient<Database>(SUPABASE_URL, ANON_KEY, {
-  global: { headers: { Authorization: `Bearer ${authToken2}` } },
-});
-
-function checkIsGood<T>({ data, error }: { data: T; error: PostgrestError | null }) {
-  assert.equal(error, null);
-  3;
-  return { data: data as T | null, error: error as PostgrestError | null };
-}
-
-function checkIsBad<T>({ data, error, count }: { data: T; error: PostgrestError | null; count: number | null }) {
-  assert.ok(error || !count);
-  return { data: data as T | null, error: error as PostgrestError | null };
-}
-
-describe("Tests", () => {
+describe("Business Logic", () => {
   beforeEach(async () => {
     // Delete all entities
     await client.from("entities").delete().eq("user_id", user_id);
@@ -76,282 +10,116 @@ describe("Tests", () => {
   });
   describe("Good cases", () => {
     test("Regular Flow", async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let data: any;
-
-      ({ data } = checkIsGood(await client.from("entities").insert([{}]).select()));
-      const { id } = data![0];
-
-      // Create trip associated with the entity
-      ({ data } = checkIsGood(
-        await client
-          .from("trips")
-          .insert([
-            {
-              id,
-              destination: "test",
-            },
-          ])
-          .select(),
-      ));
-
-      const tripid = data[0].id;
-
+      // Create entity & trip
+      const tripid = await addTrip({ client, succeed: true });
       // Create group to establish dominance
-      ({ data } = checkIsGood(
-        await client
-          .from("groups")
-          .insert([
-            {
-              trip_id: tripid,
-            },
-          ])
-          .select(),
-      ));
-
+      await create({ client, table: "groups", params: { trip_id: tripid }, succeed: true });
       // Create subtrip associated with the trip
-      ({ data } = checkIsGood(
-        await client
-          .from("entities")
-          .insert([
-            {
-              parent: tripid,
-              trip_id: tripid,
-            },
-          ])
-          .select(),
-      ));
-
-      ({ data } = checkIsGood(
-        await client
-          .from("trips")
-          .insert([
-            {
-              id: data[0].id,
-              destination: "test",
-            },
-          ])
-          .select(),
-      ));
+      await addTrip({ client, trip_id: tripid, succeed: true });
     });
   });
 
   describe("Business logic", () => {
     test("Can't lie about user_id", async () => {
       // Use client2, but use user_id of client1
-      checkIsBad(
-        await client2
-          .from("entities")
-          .insert([
-            {
-              user_id,
-            },
-          ])
-          .select(),
-      );
+      await create({
+        client: client2,
+        table: "entities",
+        params: { user_id },
+        succeed: false,
+      });
     });
 
     test("Can't create a trip in somebody else's trip", async () => {
-      // Create entity
-      let data: any;
-      ({ data } = checkIsGood(await client.from("entities").insert([{}]).select()));
-
-      const { id } = data[0];
-
-      // Create trip associated with the entity
-      ({ data } = checkIsGood(
-        await client
-          .from("trips")
-          .insert([
-            {
-              id,
-              destination: "test",
-            },
-          ])
-          .select(),
-      ));
-
-      const tripid = data[0].id;
-
+      // Create entity & trip
+      const tripid = await addTrip({ client, succeed: true });
       // Create subentity associated with the trip from another account
-      ({ data } = checkIsBad(
-        await client2
-          .from("entities")
-          .insert([
-            {
-              parent: tripid,
-              trip_id: tripid,
-            },
-          ])
-          .select(),
-      ));
+      await addTrip({ client: client2, trip_id: tripid, parent: tripid, succeed: false });
+      // Specify just parent
+      await addTrip({ client: client2, parent: tripid, succeed: false });
+      // Specify just trip id
+      await addTrip({ client: client2, trip_id: tripid, succeed: false });
     });
 
     test("Can't create a group for a trip not yours", async () => {
-      // Create entity
-      let data: any;
-      ({ data } = checkIsGood(await client.from("entities").insert([{}]).select()));
+      // Create entity & trip
+      const tripid = await addTrip({ client, succeed: true });
 
-      const { id } = data[0];
-
-      // Create trip associated with the entity
-      ({ data } = checkIsGood(
-        await client
-          .from("trips")
-          .insert([
-            {
-              id,
-              destination: "test",
-            },
-          ])
-          .select(),
-      ));
-
-      const tripid = data[0].id;
-
-      // Create a group for you
-      ({ data } = checkIsGood(
-        await client
-          .from("groups")
-          .insert([
-            {
-              trip_id: tripid,
-            },
-          ])
-          .select(),
-      ));
+      // Create group for you
+      await create({
+        client,
+        table: "groups",
+        params: {
+          trip_id: tripid,
+        },
+        succeed: true,
+      });
 
       // Liar: create a group for a trip not yours
-      ({ data } = checkIsBad(
-        await client2
-          .from("groups")
-          .insert([
-            {
-              trip_id: tripid,
-            },
-          ])
-          .select(),
-      ));
+      await create({
+        client: client2,
+        table: "groups",
+        params: {
+          trip_id: tripid,
+        },
+        succeed: false,
+      });
     });
 
     test("Can't add someone to trip if you're not owner", async () => {
-      let data: any;
-      // Create entity
-      ({ data } = checkIsGood(await client.from("entities").insert([{}]).select()));
+      // Create entity & trip
+      const tripid = await addTrip({ client, succeed: true });
 
-      const { id } = data[0];
-
-      // Create trip associated with the entity
-      ({ data } = checkIsGood(
-        await client
-          .from("trips")
-          .insert([
-            {
-              id,
-              destination: "test",
-            },
-          ])
-          .select(),
-      ));
-
-      const tripid = data[0].id;
-
-      // Create a group for you
-      ({ data } = checkIsGood(
-        await client
-          .from("groups")
-          .insert([
-            {
-              trip_id: tripid,
-            },
-          ])
-          .select(),
-      ));
+      // Create group for you
+      await create({
+        client,
+        table: "groups",
+        params: {
+          trip_id: tripid,
+        },
+        succeed: true,
+      });
 
       // Create a group for friend
-      ({ data } = checkIsGood(
-        await client
-          .from("groups")
-          .insert([
-            {
-              user_id: user_id2,
-              trip_id: tripid,
-            },
-          ])
-          .select(),
-      ));
+      await create({
+        client,
+        table: "groups",
+        params: {
+          trip_id: tripid,
+          user_id: user_id2,
+        },
+        succeed: true,
+      });
 
       // Your friend can't add others to group
-      ({ data } = checkIsBad(
-        await client2
-          .from("groups")
-          .insert([
-            {
-              trip_id: tripid,
-            },
-          ])
-          .select(),
-      ));
+      await create({
+        client: client2,
+        table: "groups",
+        params: {
+          trip_id: tripid,
+        },
+        succeed: false,
+      });
     });
   });
 
   describe("Update entities", () => {
     test("Can update own entities", async () => {
       // Create entity
-      const { data } = checkIsGood(await client.from("entities").insert([{}]).select());
-
-      const { id } = data![0];
-
+      const id = await create({ client, table: "entities", params: {}, succeed: true });
       // Can update entity (e.g rating)
-      checkIsGood(
-        await client
-          .from("entities")
-          .update({
-            rating: 5,
-          })
-          .eq("id", id)
-          .select(),
-      );
-
+      await update({ client, table: "entities", id, params: { rating: 5 }, succeed: true });
       // Cannot update owner
-      checkIsBad(
-        await client
-          .from("entities")
-          .update({
-            user_id: user_id2,
-          })
-          .eq("id", id)
-          .select(),
-      );
+      await update({ client, table: "entities", id, params: { user_id: user_id2 }, succeed: false });
     });
 
     test("Can't update other's entities", async () => {
       // Create entity
-      const { data } = checkIsGood(await client.from("entities").insert([{}]).select());
-
-      const { id } = data![0];
-
+      const id = await create({ client, table: "entities", params: {}, succeed: true });
       // Client2 can't update entity (e.g rating)
-      checkIsBad(
-        await client2
-          .from("entities")
-          .update({
-            rating: 5,
-          })
-          .eq("id", id)
-          .select(),
-      );
-
+      await update({ client: client2, table: "entities", id, params: { rating: 5 }, succeed: false });
       // Cannot update owner
-      checkIsBad(
-        await client2
-          .from("entities")
-          .update({
-            user_id: user_id2,
-          })
-          .eq("id", id)
-          .select(),
-      );
+      await update({ client: client2, table: "entities", id, params: { user_id: user_id2 }, succeed: false });
     });
   });
 });
