@@ -54,8 +54,9 @@ export const client2 = createClient<Database>(SUPABASE_URL, ANON_KEY, {
   global: { headers: { Authorization: `Bearer ${authToken2}` } },
 });
 
-function checkIsGood({ error }: { error: PostgrestError | null }) {
+function checkIsGood({ error, count }: { error: PostgrestError | null; count?: number }) {
   assert.equal(error, null);
+  if (count !== undefined) assert.equal(count, 1);
 }
 
 function checkIsBad({ error, count }: { error: PostgrestError | null; count: number | null }) {
@@ -109,6 +110,26 @@ export async function update<T extends keyof Database["public"]["Tables"]>({
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   data?.[0]?.id !== undefined && assert.ok(data?.[0]?.id);
+}
+
+export async function select<T extends keyof Database["public"]["Tables"]>({
+  client,
+  table,
+  succeed,
+  cond,
+}: {
+  client: typeof client2;
+  table: T;
+  succeed: boolean;
+  cond?: Partial<Database["public"]["Tables"][T]>;
+}) {
+  let query = client.from(table).select("*");
+  Object.entries(cond ?? {}).forEach(([key, val]) => (query = query.eq(key, val)));
+
+  const { error, count } = await query;
+
+  if (succeed) checkIsGood({ error });
+  else checkIsBad({ error, count });
 }
 
 export async function addTrip({
