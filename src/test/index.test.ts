@@ -8,6 +8,7 @@ import { cleaner } from "./utils";
 
 describe("Tests", () => {
   cleaner();
+
   policiesTest();
   selectTest();
   updateTest();
