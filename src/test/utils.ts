@@ -132,6 +132,24 @@ export async function select<T extends keyof Database["public"]["Tables"]>({
   else checkIsBad({ error, count });
 }
 
+export async function del<T extends keyof Database["public"]["Tables"]>({
+  client,
+  table,
+  succeed,
+  id,
+}: {
+  client: typeof client2;
+  table: T;
+  succeed: boolean;
+  id?: string;
+}) {
+  const query = id ? client.from(table).delete().eq("id", id) : client.from(table).delete().neq("id", 0);
+  const { error, count } = await query;
+
+  if (succeed) checkIsGood({ error });
+  else checkIsBad({ error, count });
+}
+
 export async function addTrip({
   client,
   id,
