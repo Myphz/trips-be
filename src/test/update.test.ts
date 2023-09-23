@@ -51,7 +51,6 @@ export default function () {
         // Create trip
         const id = await addTrip({ client, succeed: true });
         // Add groups
-        await create({ client, table: "groups", params: { trip_id: id }, succeed: true });
         await create({ client, table: "groups", params: { trip_id: id, user_id: user_id2 }, succeed: true });
         // Client2 can now update trip
         await update({ client: client2, table: "trips", id, params: { destination: "test2" }, succeed: true });

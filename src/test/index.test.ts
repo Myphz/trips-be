@@ -2,8 +2,15 @@ import policiesTest from "./policies.test";
 import selectTest from "./select.test";
 import updateTest from "./update.test";
 import deleteTest from "./delete.test";
+import photosTest from "./photos.test";
+import { describe } from "node:test";
+import { cleaner } from "./utils";
 
-// policiesTest();
-// selectTest();
-// updateTest();
-deleteTest();
+describe("Tests", () => {
+  cleaner();
+  policiesTest();
+  selectTest();
+  updateTest();
+  deleteTest();
+  photosTest();
+});
