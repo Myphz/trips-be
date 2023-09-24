@@ -4,7 +4,7 @@ import { throwError } from "../utils/throw";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import assert from "node:assert/strict";
-import { beforeEach } from "node:test";
+import { after, beforeEach } from "node:test";
 
 dotenv.config({ path: ".env.test" });
 
@@ -194,9 +194,12 @@ export async function addTrip({
   return ret;
 }
 
-export const cleaner = () =>
-  beforeEach(async () => {
+export const cleaner = () => {
+  const cleanup = async () => {
     // Delete all entities
     await client.from("entities").delete().eq("user_id", user_id);
     await client2.from("entities").delete().eq("user_id", user_id2);
-  });
+  };
+  beforeEach(cleanup);
+  after(cleanup);
+};
