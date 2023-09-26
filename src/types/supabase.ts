@@ -60,16 +60,19 @@ export interface Database {
       }
       groups: {
         Row: {
+          accepted: boolean
           id: number
           trip_id: number
           user_id: string
         }
         Insert: {
+          accepted?: boolean
           id?: number
           trip_id: number
           user_id?: string
         }
         Update: {
+          accepted?: boolean
           id?: number
           trip_id?: number
           user_id?: string
@@ -131,22 +134,31 @@ export interface Database {
           created_at: string
           entity_id: number
           id: string
+          user_id: string
         }
         Insert: {
           created_at?: string
           entity_id: number
           id: string
+          user_id?: string
         }
         Update: {
           created_at?: string
           entity_id?: number
           id?: string
+          user_id?: string
         }
         Relationships: [
           {
             foreignKeyName: "photos_entity_id_fkey"
             columns: ["entity_id"]
             referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "photos_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           }
         ]
@@ -289,6 +301,27 @@ export interface Database {
       [_ in never]: never
     }
     Functions: {
+      get_all: {
+        Args: {
+          tripid?: number
+          parentid?: number
+        }
+        Returns: {
+          id: number
+          description: string
+          rating: number
+          trip_id: number
+          trip_destination: string
+          place_name: string
+          lodging_name: string
+        }[]
+      }
+      get_tripid: {
+        Args: {
+          _id: number
+        }
+        Returns: number
+      }
       has_access: {
         Args: {
           userid: string

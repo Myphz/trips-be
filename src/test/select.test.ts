@@ -1,4 +1,4 @@
-import { create, client, user_id2, client2, addTrip, select } from "./utils";
+import { create, client, user_id2, client2, addTrip, select, acceptGroup, addGroup } from "./utils";
 import { test, describe } from "node:test";
 
 export default function () {
@@ -22,7 +22,8 @@ export default function () {
         // Create trip
         const id = await addTrip({ client, succeed: true });
         // Create groups
-        await create({ client, table: "groups", params: { trip_id: id, user_id: user_id2 }, succeed: true });
+        const groupid = await addGroup({ client, succeed: true, tripid: id, user_id: user_id2 });
+        await acceptGroup({ client: client2, groupid, succeed: true });
 
         // Client2 can select entity
         await select({ client: client2, table: "entities", succeed: true });

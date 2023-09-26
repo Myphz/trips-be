@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { test, describe } from "node:test";
-import { client, client2, addTrip, create, user_id, user_id2 } from "./utils";
+import { client, client2, addTrip, create, user_id, user_id2, addGroup, acceptGroup } from "./utils";
 
 export default function () {
   describe("Business Logic", () => {
@@ -61,15 +61,8 @@ export default function () {
         const tripid = await addTrip({ client, succeed: true });
 
         // Create a group for friend
-        await create({
-          client,
-          table: "groups",
-          params: {
-            trip_id: tripid,
-            user_id: user_id2,
-          },
-          succeed: true,
-        });
+        const groupid = await addGroup({ client, succeed: true, tripid, user_id: user_id2 });
+        await acceptGroup({ client: client2, groupid, succeed: true });
 
         // Your friend can't add others to group
         await create({
@@ -79,6 +72,62 @@ export default function () {
             trip_id: tripid,
           },
           succeed: false,
+        });
+      });
+    });
+
+    describe("Groups", () => {
+      test("Can invite other users to group", async () => {
+        // Create entity & trip
+        const tripid = await addTrip({ client, succeed: true });
+        // Create a group for friend
+        const groupid = await addGroup({ client, succeed: true, tripid, user_id: user_id2 });
+        await acceptGroup({ client: client2, groupid, succeed: true });
+      });
+
+      test("Can't set accepted=true for others", async () => {
+        // Create entity & trip
+        const tripid = await addTrip({ client, succeed: true });
+        // Create a group for friend (error because it's automatically set as accepted)
+        await create({
+          client,
+          table: "groups",
+          params: { trip_id: tripid, user_id: user_id2, accepted: true },
+          succeed: false,
+        });
+        // Create group for real with accepted=false (default)
+        const groupid = await addGroup({ client, succeed: true, tripid, user_id: user_id2 });
+        // Client1 can't accept the invite
+        await acceptGroup({ client, groupid, succeed: false });
+      });
+
+      test("Can't access the trip until accepted=true", async () => {
+        // Create entity & trip
+        const tripid = await addTrip({ client, succeed: true });
+        // Client2 can't access
+        await create({
+          client: client2,
+          table: "entities",
+          params: { trip_id: tripid, parent: tripid },
+          succeed: false,
+        });
+        // Create a group for client2
+        const groupid = await addGroup({ client, succeed: true, tripid, user_id: user_id2 });
+        // Client2 still can't access because he hasn't accepted
+        await create({
+          client: client2,
+          table: "entities",
+          params: { trip_id: tripid, parent: tripid },
+          succeed: false,
+        });
+        // Client2 accepts invite
+        await acceptGroup({ client: client2, groupid, succeed: true });
+        // Client2 can now access
+        await create({
+          client: client2,
+          table: "entities",
+          params: { trip_id: tripid, parent: tripid },
+          succeed: true,
         });
       });
     });

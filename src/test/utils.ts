@@ -151,6 +151,40 @@ export async function del<T extends keyof Database["public"]["Tables"]>({
   else checkIsBad({ error, count });
 }
 
+export async function addGroup({
+  client,
+  succeed,
+  tripid,
+  user_id,
+}: {
+  client: typeof client2;
+  succeed: boolean;
+  tripid: number;
+  user_id: string;
+}) {
+  return await create({
+    client,
+    table: "groups",
+    params: {
+      user_id: user_id,
+      trip_id: tripid,
+    },
+    succeed,
+  });
+}
+
+export async function acceptGroup({
+  client,
+  succeed,
+  groupid,
+}: {
+  client: typeof client2;
+  succeed: boolean;
+  groupid: string;
+}) {
+  await update({ client, id: groupid, table: "groups", params: { accepted: true }, succeed });
+}
+
 export async function addTrip({
   client,
   id,
@@ -187,7 +221,7 @@ export async function addTrip({
   await create({
     client,
     table: "groups",
-    params: { trip_id: ret },
+    params: { trip_id: ret, accepted: true },
     succeed: true,
   });
 
