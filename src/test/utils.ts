@@ -191,12 +191,14 @@ export async function addTrip({
   succeed,
   trip_id,
   parent,
+  addGroup = true,
 }: {
   client: typeof client2;
   id?: number;
   succeed: boolean;
   trip_id?: number;
   parent?: number;
+  addGroup?: boolean;
 }) {
   const entityId =
     id ??
@@ -218,12 +220,13 @@ export async function addTrip({
   });
 
   // Create group
-  await create({
-    client,
-    table: "groups",
-    params: { trip_id: ret, accepted: true },
-    succeed: true,
-  });
+  addGroup &&
+    (await create({
+      client,
+      table: "groups",
+      params: { trip_id: ret, accepted: true },
+      succeed: true,
+    }));
 
   return ret;
 }

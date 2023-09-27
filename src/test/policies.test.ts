@@ -9,7 +9,9 @@ export default function () {
         // Create entity & trip
         const tripid = await addTrip({ client, succeed: true });
         // Create subtrip associated with the trip
-        await addTrip({ client, trip_id: tripid, parent: tripid, succeed: true });
+        const id = await addTrip({ client, trip_id: tripid, parent: tripid, addGroup: false, succeed: true });
+        // Create nested subgroups
+        await addTrip({ client, trip_id: tripid, parent: id, succeed: true, addGroup: false });
       });
     });
 
