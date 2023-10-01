@@ -1,6 +1,10 @@
 import { fastify } from "./constants";
 import { FilesAPI } from "./routes/files";
+import cors from "@fastify/cors";
 
+fastify.register(cors, {
+  origin: ["http://localhost:5173"],
+});
 fastify.register(FilesAPI);
 
 const main = async () => {

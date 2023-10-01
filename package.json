@@ -6,6 +6,7 @@
     "generate-types": "npx supabase gen types typescript --project-id 'osbnntqdwcamhqbpdzwz' --schema public > src/types/supabase.ts"
   },
   "dependencies": {
+    "@fastify/cors": "^8.4.0",
     "@fastify/multipart": "^7.7.3",
     "@supabase/supabase-js": "^2.36.0",
     "fastify": "^4.22.2",
