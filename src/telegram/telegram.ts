@@ -13,11 +13,13 @@ export async function uploadFile(buffer: Buffer, contentType: string) {
 }
 
 export async function getFile(fileId: string) {
-  const link = await bot.getFileLink(fileId);
+  let link: string;
+  try {
+    link = await bot.getFileLink(fileId);
+  } catch (err) {
+    return;
+  }
 
   const imageData = await fetch(link);
-  const stringBuffer = Buffer.from(await imageData.arrayBuffer()).toString("base64");
-
-  const contentType = imageData.headers.get("content-type");
-  return `data:${contentType};base64,${stringBuffer}`;
+  return Buffer.from(await imageData.arrayBuffer());
 }

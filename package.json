@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "dev": "nodemon src/main.ts",
+    "dev": "ts-node src/main.ts",
     "build": "tsc",
     "test": "node --test -r esbuild-register src/test/*.test.ts",
     "generate-types": "npx supabase gen types typescript --project-id 'osbnntqdwcamhqbpdzwz' --schema public > src/types/supabase.ts"

@@ -1,6 +1,6 @@
 import { FastifyPluginCallback } from "fastify";
 import multipart from "@fastify/multipart";
-import { uploadFile } from "../telegram";
+import { getFile, uploadFile } from "../telegram";
 
 export const FilesAPI: FastifyPluginCallback = async (fastify, _, done) => {
   await fastify.register(multipart, {
@@ -23,6 +23,17 @@ export const FilesAPI: FastifyPluginCallback = async (fastify, _, done) => {
 
     res.code(201);
     return ids;
+  });
+
+  fastify.get("/file", async (req, res) => {
+    if (!req.query || typeof req.query !== "object" || !("id" in req.query)) return res.code(404).send();
+    const { id } = req.query;
+    if (typeof id !== "string") return res.code(401).send();
+
+    const file = await getFile(id);
+    if (!file) return res.code(404).send();
+
+    return file;
   });
 
   done();
