@@ -10,7 +10,8 @@ fastify.register(FilesAPI);
 const main = async () => {
   try {
     await fastify.listen({
-      port: process.env.PORT ? parseInt(process.env.PORT) : 3000,
+      host: "0.0.0.0",
+      port: process.env.PORT ? parseInt(process.env.PORT) : 8080,
     });
   } catch (err) {
     fastify.log.error(err);
