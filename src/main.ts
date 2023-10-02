@@ -3,7 +3,7 @@ import { FilesAPI } from "./routes/files";
 import cors from "@fastify/cors";
 
 fastify.register(cors, {
-  origin: ["http://localhost:5173"],
+  origin: ["http://localhost:5173", "http://localhost", "capacitor://localhost"],
 });
 fastify.register(FilesAPI);
 

@@ -8,7 +8,7 @@ process.env["NTBA_FIX_350"] = "1";
 const bot = new TelegramBot(TRIPS_BOT_API_TOKEN, { filepath: false });
 
 export async function uploadFile(buffer: Buffer, contentType: string) {
-  const msg = await bot.sendDocument(CHAT_ID, buffer, {}, { filename: "photoz", contentType });
+  const msg = await bot.sendDocument(CHAT_ID, buffer, {}, { filename: `${+new Date()}`, contentType });
   return msg.document?.file_id ?? throwError("Couldn't upload file!");
 }
 
