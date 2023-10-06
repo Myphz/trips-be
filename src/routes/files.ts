@@ -1,6 +1,6 @@
 import { FastifyPluginCallback } from "fastify";
 import multipart from "@fastify/multipart";
-import { getFile, uploadFile } from "../telegram";
+import { getFileLink, uploadFile } from "../telegram";
 
 export const FilesAPI: FastifyPluginCallback = async (fastify, _, done) => {
   await fastify.register(multipart, {
@@ -14,11 +14,11 @@ export const FilesAPI: FastifyPluginCallback = async (fastify, _, done) => {
 
   fastify.post("/upload", async (req, res) => {
     const files = req.files();
-    const ids: Record<string, string> = {};
+    const ids: string[] = [];
 
     for await (const file of files) {
       const id = await uploadFile(await file.toBuffer(), file.mimetype);
-      ids[file.fieldname] = id;
+      ids.push(id);
     }
 
     res.code(201);
@@ -30,7 +30,7 @@ export const FilesAPI: FastifyPluginCallback = async (fastify, _, done) => {
     const { id } = req.query;
     if (typeof id !== "string") return res.code(401).send();
 
-    const file = await getFile(id);
+    const file = await getFileLink(id);
     if (!file) return res.code(404).send();
 
     return file;
