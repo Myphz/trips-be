@@ -28,6 +28,16 @@ export default function () {
         // Client2 can select entity
         await select({ client: client2, table: "entities", succeed: true });
       });
+
+      test("Can select entities you have access to (not accepted)", async () => {
+        // Create trip
+        const id = await addTrip({ client, succeed: true });
+        // Create group
+        await addGroup({ client, succeed: true, tripid: id, user_id: user_id2 });
+
+        // Client2 can select entity
+        await select({ client: client2, table: "entities", succeed: true });
+      });
     });
   });
 }
