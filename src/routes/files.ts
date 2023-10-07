@@ -18,7 +18,7 @@ export const FilesAPI: FastifyPluginCallback = async (fastify, _, done) => {
 
     for await (const file of files) {
       const id = await uploadFile(await file.toBuffer(), file.mimetype);
-      ret[file.filename] = id;
+      ret[file.fieldname] = id;
     }
 
     res.code(201);
