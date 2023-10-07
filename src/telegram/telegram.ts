@@ -15,3 +15,15 @@ export async function uploadFile(buffer: Buffer, contentType: string) {
 export async function getFileLink(fileId: string) {
   return await bot.getFileLink(fileId);
 }
+
+export async function getFileDownload(fileId: string) {
+  let link: string;
+  try {
+    link = await bot.getFileLink(fileId);
+  } catch (err) {
+    return;
+  }
+
+  const imageData = await fetch(link);
+  return Buffer.from(await imageData.arrayBuffer());
+}
