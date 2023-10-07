@@ -14,15 +14,15 @@ export const FilesAPI: FastifyPluginCallback = async (fastify, _, done) => {
 
   fastify.post("/upload", async (req, res) => {
     const files = req.files();
-    const ids: string[] = [];
+    const ret: Record<string, string> = {};
 
     for await (const file of files) {
       const id = await uploadFile(await file.toBuffer(), file.mimetype);
-      ids.push(id);
+      ret[file.filename] = id;
     }
 
     res.code(201);
-    return ids;
+    return ret;
   });
 
   fastify.get("/file", async (req, res) => {
