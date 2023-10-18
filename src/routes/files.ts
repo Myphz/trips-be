@@ -6,8 +6,8 @@ export const FilesAPI: FastifyPluginCallback = async (fastify, _, done) => {
   await fastify.register(multipart, {
     limits: {
       fieldNameSize: 1000,
-      fileSize: 1e9,
-      files: 500,
+      fileSize: 5e6, // 5 MB
+      files: 50,
       fields: 0,
     },
   });
