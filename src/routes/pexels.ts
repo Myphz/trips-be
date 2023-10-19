@@ -3,7 +3,6 @@ import { PEXELS_API_KEY } from "../constants";
 
 const RESULTS = "30";
 const PEXELS_ENDPOINT = "https://api.pexels.com/v1/search";
-const ORIENTATION = "portrait";
 
 export const PexelsAPI: FastifyPluginCallback = async (fastify, _, done) => {
   fastify.get("/pexels", async (req, res) => {
@@ -14,7 +13,6 @@ export const PexelsAPI: FastifyPluginCallback = async (fastify, _, done) => {
     const params = new URLSearchParams({
       query,
       per_page: RESULTS,
-      orientation: ORIENTATION,
     });
 
     try {
