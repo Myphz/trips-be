@@ -1,4 +1,5 @@
 import { FastifyPluginCallback } from "fastify";
+import { PEXELS_API_KEY } from "../constants";
 
 const RESULTS = "30";
 const PEXELS_ENDPOINT = "https://api.pexels.com/v1/search";
@@ -19,7 +20,7 @@ export const PexelsAPI: FastifyPluginCallback = async (fastify, _, done) => {
     try {
       const response = await fetch(`${PEXELS_ENDPOINT}?${params}`, {
         headers: {
-          Authorization: `Bearer ${process.env.PEXELS_API_KEY}`,
+          Authorization: PEXELS_API_KEY,
         },
       });
 
