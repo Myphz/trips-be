@@ -1,11 +1,14 @@
 import { fastify } from "./constants";
 import { FilesAPI } from "./routes/files";
+import { PexelsAPI } from "./routes/pexels";
+
 import cors from "@fastify/cors";
 
 fastify.register(cors, {
   origin: ["http://localhost:5173", "http://localhost", "https://localhost", "capacitor://localhost"],
 });
 fastify.register(FilesAPI);
+fastify.register(PexelsAPI);
 
 const main = async () => {
   try {
