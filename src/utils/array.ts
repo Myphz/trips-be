@@ -14,7 +14,9 @@ export function splitArrayIntoChunks<T>(arr: T[], chunkSize: number): T[][] {
 
 export async function filesGeneratorToArray(files: AsyncIterableIterator<MultipartFile>) {
   const out: LoadedFile[] = [];
+  let idx = 0;
   for await (const file of files) {
+    console.log(`Loading file #${++idx}...`);
     out.push({ ...file, content: await file.toBuffer() });
   }
   return out;
