@@ -17,7 +17,9 @@ export const FilesAPI: FastifyPluginCallback = async (fastify, _, done) => {
     // saveRequestFiles saves files in tmp directory.
     // This is to avoid working with req.files(), which is an async iterator... and a pain to work with.
     // Files from saveRequestFiles() have a useless toBuffer method, so it needs to be replaced.
+    console.log("Saving file to disk...");
     const files = (await req.saveRequestFiles()).map((file) => ({ ...file, toBuffer: () => readFile(file.filepath) }));
+    console.log(`Start upload of ${files.length} files...`);
     const ret = await uploadFiles(files);
 
     res.code(201);

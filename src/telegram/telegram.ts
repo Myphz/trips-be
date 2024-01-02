@@ -10,10 +10,12 @@ const bot = new TelegramBot(TRIPS_BOT_API_TOKEN, { filepath: false });
 
 export async function uploadFiles(files: MultipartFile[]) {
   // This library has incorrect typescript typings... InputMediaDocument missing
+  console.log("Reading files from disk...");
   const media = (await Promise.all(
     files.map(async (file) => ({ media: await file.toBuffer(), type: "document" })),
   )) as unknown as InputMediaPhoto[];
 
+  console.log("Uploading to Telegram...");
   return (await bot.sendMediaGroup(CHAT_ID, media)).reduce(
     (prev, curr, i) => ({
       ...prev,
