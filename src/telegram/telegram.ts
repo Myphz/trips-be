@@ -1,10 +1,5 @@
 import TelegramBot, { InputMediaPhoto } from "node-telegram-bot-api";
-import {
-  CHAT_ID,
-  TELEGRAM_MAX_PHOTOS_PER_MESSAGE,
-  TELEGRAM_MAX_PHOTOS_PER_SECOND,
-  TRIPS_BOT_API_TOKEN,
-} from "../constants";
+import { CHAT_ID, TELEGRAM_MAX_PHOTOS_PER_MESSAGE, TRIPS_BOT_API_TOKEN } from "../constants";
 import { throwError } from "../utils/throw";
 import { splitArrayIntoChunks } from "../utils/array";
 
@@ -39,9 +34,8 @@ export async function uploadFiles(files: Express.Multer.File[]) {
     const uploadedChunk = await uploadFileGroup(fileChunks[i], mediaChunks[i]);
     // Merge results
     ret = { ...ret, ...uploadedChunk };
-    // Wait 1s after uploading TELEGRAM_MAX_PHOTOS_PER_SECOND photos
-    if (i && ((i + 1) * TELEGRAM_MAX_PHOTOS_PER_MESSAGE) % TELEGRAM_MAX_PHOTOS_PER_SECOND === 0)
-      await new Promise((res) => setTimeout(res, 1000));
+    // Wait 1s after every chunk
+    await new Promise((res) => setTimeout(res, 1000));
   }
 
   console.log("Files uploaded successfully");
