@@ -14,9 +14,13 @@ export async function uploadFiles(files: MultipartFile[]) {
     files.map(async (file) => ({ media: await file.toBuffer(), type: "document" })),
   )) as unknown as InputMediaPhoto[];
 
-  return (await bot.sendMediaGroup(CHAT_ID, media)).map((msg, i) => ({
-    [files[i].fieldname]: msg.document?.file_id ?? throwError("Couldn't upload file!"),
-  }));
+  return (await bot.sendMediaGroup(CHAT_ID, media)).reduce(
+    (prev, curr, i) => ({
+      ...prev,
+      [files[i].fieldname]: curr.document?.file_id ?? throwError("Couldn't upload file!"),
+    }),
+    {},
+  );
 }
 
 export async function getFileLink(fileId: string) {
