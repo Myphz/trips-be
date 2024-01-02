@@ -1,24 +1,32 @@
-import { fastify } from "./constants";
+import express from "express";
+import cors from "cors";
 import { FilesAPI } from "./routes/files";
 import { PexelsAPI } from "./routes/pexels";
 
-import cors from "@fastify/cors";
+const app = express();
+const PORT = process.env.PORT ? parseInt(process.env.PORT) : 8080;
 
-fastify.register(cors, {
-  origin: ["http://localhost:5173", "http://localhost", "https://localhost", "capacitor://localhost"],
+app.use(
+  cors({
+    origin: ["http://localhost:5173", "http://localhost", "https://localhost", "capacitor://localhost"],
+  }),
+);
+
+app.use(FilesAPI);
+app.use(PexelsAPI);
+
+const server = app.listen(PORT, () => {
+  console.log(`Server listening on port ${PORT}`);
 });
-fastify.register(FilesAPI);
-fastify.register(PexelsAPI);
 
-const main = async () => {
-  try {
-    await fastify.listen({
-      host: "0.0.0.0",
-      port: process.env.PORT ? parseInt(process.env.PORT) : 8080,
-    });
-  } catch (err) {
-    fastify.log.error(err);
-    process.exit(1);
-  }
-};
-main();
+// Optional: Handle errors and clean up resources
+server.on("error", (error) => {
+  console.error("Server error:", error);
+});
+
+process.on("SIGINT", () => {
+  server.close(() => {
+    console.log("Server closed");
+    process.exit(0);
+  });
+});

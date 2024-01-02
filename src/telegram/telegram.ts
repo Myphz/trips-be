@@ -6,14 +6,14 @@ import {
   TRIPS_BOT_API_TOKEN,
 } from "../constants";
 import { throwError } from "../utils/throw";
-import { LoadedFile, splitArrayIntoChunks } from "../utils/array";
+import { splitArrayIntoChunks } from "../utils/array";
 
 // Disable warning
 process.env["NTBA_FIX_350"] = "1";
 
 const bot = new TelegramBot(TRIPS_BOT_API_TOKEN, { filepath: false });
 
-async function uploadFileGroup(files: LoadedFile[], media: InputMediaPhoto[]) {
+async function uploadFileGroup(files: Express.Multer.File[], media: InputMediaPhoto[]) {
   return (await bot.sendMediaGroup(CHAT_ID, media)).reduce(
     (prev, curr, i) => ({
       ...prev,
@@ -23,11 +23,11 @@ async function uploadFileGroup(files: LoadedFile[], media: InputMediaPhoto[]) {
   );
 }
 
-export async function uploadFiles(files: LoadedFile[]) {
+export async function uploadFiles(files: Express.Multer.File[]) {
   let ret: Record<string, string> = {};
   // This library has incorrect typescript typings... InputMediaDocument missing
   const media = (await Promise.all(
-    files.map(async (file) => ({ media: file.content, type: "document" })),
+    files.map(async (file) => ({ media: file.buffer, type: "document" })),
   )) as unknown as InputMediaPhoto[];
   const fileChunks = splitArrayIntoChunks(files, TELEGRAM_MAX_PHOTOS_PER_MESSAGE);
   const mediaChunks = splitArrayIntoChunks(media, TELEGRAM_MAX_PHOTOS_PER_MESSAGE);
@@ -44,6 +44,7 @@ export async function uploadFiles(files: LoadedFile[]) {
       await new Promise((res) => setTimeout(res, 1000));
   }
 
+  console.log("Files uploaded successfully");
   return ret;
 }
 
