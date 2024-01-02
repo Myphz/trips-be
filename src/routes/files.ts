@@ -1,6 +1,7 @@
 import { FastifyPluginCallback } from "fastify";
 import multipart from "@fastify/multipart";
-import { getFileDownload, getFileLink, uploadFile } from "../telegram";
+import { getFileDownload, getFileLink, uploadFiles } from "../telegram";
+import { readFile } from "fs/promises";
 
 export const FilesAPI: FastifyPluginCallback = async (fastify, _, done) => {
   await fastify.register(multipart, {
@@ -13,13 +14,11 @@ export const FilesAPI: FastifyPluginCallback = async (fastify, _, done) => {
   });
 
   fastify.post("/upload", async (req, res) => {
-    const files = req.files();
-    const ret: Record<string, string> = {};
-
-    for await (const file of files) {
-      const id = await uploadFile(await file.toBuffer(), file.mimetype);
-      ret[file.fieldname] = id;
-    }
+    // saveRequestFiles saves files in tmp directory.
+    // This is to avoid working with req.files(), which is an async iterator... and a pain to work with.
+    // Files from saveRequestFiles() have a useless toBuffer method, so it needs to be replaced.
+    const files = (await req.saveRequestFiles()).map((file) => ({ ...file, toBuffer: () => readFile(file.filepath) }));
+    const ret = await uploadFiles(files);
 
     res.code(201);
     return ret;

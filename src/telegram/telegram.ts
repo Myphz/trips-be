@@ -1,15 +1,22 @@
-import TelegramBot from "node-telegram-bot-api";
+import TelegramBot, { InputMediaPhoto } from "node-telegram-bot-api";
 import { CHAT_ID, TRIPS_BOT_API_TOKEN } from "../constants";
 import { throwError } from "../utils/throw";
+import { MultipartFile } from "@fastify/multipart";
 
 // Disable warning
 process.env["NTBA_FIX_350"] = "1";
 
 const bot = new TelegramBot(TRIPS_BOT_API_TOKEN, { filepath: false });
 
-export async function uploadFile(buffer: Buffer, contentType: string) {
-  const msg = await bot.sendDocument(CHAT_ID, buffer, {}, { filename: `${+new Date()}`, contentType });
-  return msg.document?.file_id ?? throwError("Couldn't upload file!");
+export async function uploadFiles(files: MultipartFile[]) {
+  // This library has incorrect typescript typings... InputMediaDocument missing
+  const media = (await Promise.all(
+    files.map(async (file) => ({ media: await file.toBuffer(), type: "document" })),
+  )) as unknown as InputMediaPhoto[];
+
+  return (await bot.sendMediaGroup(CHAT_ID, media)).map((msg, i) => ({
+    [files[i].fieldname]: msg.document?.file_id ?? throwError("Couldn't upload file!"),
+  }));
 }
 
 export async function getFileLink(fileId: string) {
