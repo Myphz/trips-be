@@ -1,7 +1,7 @@
 import { FastifyPluginCallback } from "fastify";
 import multipart from "@fastify/multipart";
 import { getFileDownload, getFileLink, uploadFiles } from "../telegram";
-import { readFile } from "fs/promises";
+import { filesGeneratorToArray } from "../utils/array";
 
 export const FilesAPI: FastifyPluginCallback = async (fastify, _, done) => {
   await fastify.register(multipart, {
@@ -14,11 +14,8 @@ export const FilesAPI: FastifyPluginCallback = async (fastify, _, done) => {
   });
 
   fastify.post("/upload", async (req, res) => {
-    // saveRequestFiles saves files in tmp directory.
-    // This is to avoid working with req.files(), which is an async iterator... and a pain to work with.
-    // Files from saveRequestFiles() have a useless toBuffer method, so it needs to be replaced.
-    console.log("Saving file to disk...");
-    const files = (await req.saveRequestFiles()).map((file) => ({ ...file, toBuffer: () => readFile(file.filepath) }));
+    console.log("Loading files...");
+    const files = await filesGeneratorToArray(req.files());
     console.log(`Start upload of ${files.length} files...`);
     const ret = await uploadFiles(files);
 

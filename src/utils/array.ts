@@ -1,3 +1,7 @@
+import { MultipartFile } from "@fastify/multipart";
+
+export type LoadedFile = MultipartFile & { content: Buffer };
+
 export function splitArrayIntoChunks<T>(arr: T[], chunkSize: number): T[][] {
   const result: T[][] = [];
 
@@ -6,4 +10,12 @@ export function splitArrayIntoChunks<T>(arr: T[], chunkSize: number): T[][] {
   }
 
   return result;
+}
+
+export async function filesGeneratorToArray(files: AsyncIterableIterator<MultipartFile>) {
+  const out: LoadedFile[] = [];
+  for await (const file of files) {
+    out.push({ ...file, content: await file.toBuffer() });
+  }
+  return out;
 }
