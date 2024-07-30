@@ -9,7 +9,12 @@ export default function () {
       // Can't create other things with the same id
       await create({ client, table: "trips", params: { id: tripId, destination: "idk" }, succeed: false });
       await create({ client, table: "lodgings", params: { id: tripId, name: "idk" }, succeed: false });
-      await create({ client, table: "transports", params: { id: tripId }, succeed: false });
+      await create({
+        client,
+        table: "transports",
+        params: { id: tripId, arrival_place: "idk", departure_place: "idk" },
+        succeed: false,
+      });
       await create({ client, table: "places", params: { id: tripId, name: "idk" }, succeed: false });
     });
   });
