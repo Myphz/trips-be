@@ -6,13 +6,14 @@ import dotenv from "dotenv";
 import assert from "node:assert/strict";
 import { after, beforeEach } from "node:test";
 
+dotenv.config();
 dotenv.config({ path: ".env.test" });
 
 const SUPABASE_URL = process.env.SUPABASE_URL ?? throwError("supabase url");
 const ANON_KEY = process.env.ANON_KEY ?? throwError("anon key");
 
-export const user_id = "6b66be31-4966-4503-9dd4-67a44c1c0505";
-export const user_id2 = "807e08e3-1b6d-4cb5-b3f9-55758e68dd3c";
+export const user_id = "4d3e1bb5-492e-4fd7-8dfd-fe9f9d75de43";
+export const user_id2 = "ac791267-b0a8-4f94-ab40-0a1cd846d000";
 
 function generateJWT(email: string, id: string) {
   const now = Math.floor(+new Date() / 1000) - 20;
