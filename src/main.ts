@@ -22,6 +22,8 @@ app.use(
 app.use(FilesAPI);
 app.use(PexelsAPI);
 
+console.log("\n\n\n", process.env, "\n\n\n");
+
 const server = app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
 });
